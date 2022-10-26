@@ -43,20 +43,28 @@ export class UsuarioController {
     })
     usuario: Omit<Usuario, 'id'>,
   ): Promise<Usuario> {
-        //Creamos la clave antes de guardar el usuario
+
         const clave = this.servicioAuth.GenerarClave();
         const claveCifrada = this.servicioAuth.CifrarClave(clave);
+        usuario.password = claveCifrada;
+        let tipo = ''; //Definimos el tipo de comunicacion
+        tipo = 'email';
+        let servicioWeb = '';
+        let destino = '';
 
-        // Notificamos al usuario por correo
-        // let destino = usuario.correo;
-        // Notificamos al usuario por telefono y cambiar la url por send_email
-        const destino = usuario.telefono;
+        if(tipo == 'sms'){
+          destino = usuario.telefono;
+          servicioWeb = 'send_sms';
+        }else{
+          destino = usuario.correo;
+          servicioWeb = 'send_email';
+        }
 
         const asunto = 'Registro de usuario en plataforma';
         const contenido = `Hola, ${usuario.nombre} ${usuario.apellidos} su contraseña en el portal es: ${clave}`
         axios({
           method: 'post',
-          url: 'http://localhost:5000/send_sms', //Si quiero enviar por correo cambiar a send_email
+          url: 'http://localhost:5000/' + servicioWeb,
 
           headers: {
             'Accept': 'application/json',
@@ -67,17 +75,15 @@ export class UsuarioController {
             asunto: asunto,
             contenido: contenido
           }
-        }).then((data: any) => {
+        }).then((data) => {
           console.log(data)
-        }).catch((err: any) => {
+        }).catch((err) => {
           console.log(err)
-        })
+        });
 
-        usuario.password = claveCifrada;
-        //Guardamos el usuario
         const p = await this.usuarioRepository.create(usuario);
 
-        return p;
+      return p;
   }
 
   @get('/usuarios/count')
