@@ -45,6 +45,7 @@ export class UsuarioController {
     usuario: Omit<Usuario, 'id'>,
   ): Promise<Usuario> {
 
+
       const clave = this.servicioAuth.GenerarClave();
       const claveCifrada = this.servicioAuth.CifrarClave(clave);
       usuario.password = claveCifrada;
